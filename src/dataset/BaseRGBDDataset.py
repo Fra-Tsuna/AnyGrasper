@@ -6,9 +6,7 @@ import cv2
 import numpy as np
 from torch.utils.data import Dataset
 
-from src.utils.geometry import invert_se3
-from .rgbd_to_pcd import rgbd_to_pcd
-
+from src.utils.geometry import invert_se3, rgbd_to_pcd
 
 
 class BaseRGBDDataset(Dataset):

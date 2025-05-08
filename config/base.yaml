@@ -1,9 +1,7 @@
-anygrasp:
-  checkpoint_path: ckpt/checkpoint_detection.tar
-  max_gripper_width: 0.1
-  gripper_height: 0.03
-  top_down_grasp: true
-  debug: true
+defaults:
+  - _self_ 
+  - anygrasper: anygrasper
+  - dataset: rgbd
 
 workspace_limits:
   xmin: -0.19
@@ -20,4 +18,5 @@ camera:
   cy: 349.62
   scale: 1000.0
 
-data_dir: "./example_data"
+debug: true
+data_dir: "./data/example_data"

@@ -1,7 +1,7 @@
-_target_: rgbd_dataset.datasets.RGBD.RGBD
+_target_: src.dataset.RGBD.RGBD
 dataset_name: "rgbd"
-base_path: ???
-scene: locobot
+base_path: data
+scene: real_lab
 width: 640
 height: 480
 resized_width: -1
@@ -17,4 +17,4 @@ rgb_dir: rgb
 depth_dir: depth
 pose_dir: pose
 intrinsics_dir: intrinsics
-pose_dict: true
+pose_dict: false

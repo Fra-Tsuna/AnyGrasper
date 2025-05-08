@@ -1,0 +1,10 @@
+_target_: src.model.anygrasper.AnyGrasper
+apply_object_mask: true
+dense_grasp: false
+collision_detection: true
+anygrasp_cfg:
+  checkpoint_path: ckpt/checkpoint_detection.tar
+  max_gripper_width: 0.1
+  gripper_height: 0.03
+  top_down_grasp: true
+  debug: true

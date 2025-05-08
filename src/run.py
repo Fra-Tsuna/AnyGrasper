@@ -1,7 +1,9 @@
 import hydra
+from hydra.utils import instantiate
 from omegaconf import DictConfig
 import os
 import torch
+from torch.utils.data import DataLoader
 import numpy as np
 import open3d as o3d
 from PIL import Image
@@ -9,53 +11,49 @@ from PIL import Image
 from gsnet import AnyGrasp
 from graspnetAPI import GraspGroup
 
+from src.model.anygrasper import AnyGrasper
+from src.dataset.RGBD import RGBD
+from src.dataset.BaseRGBDDataset import BaseRGBDDataset
+
 def main(cfg: DictConfig):
 
-    # Clamp max_gripper_width
+    grasper: AnyGrasper = instantiate(cfg.anygrasper)
+    
+    dataset: BaseRGBDDataset = instantiate(cfg.dataset)
+    
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0)
+    
+    # # get data
+    # colors = np.array(Image.open(os.path.join(cfg.data_dir, 'color.png')), dtype=np.float32) / 255.0
+    # depths = np.array(Image.open(os.path.join(cfg.data_dir, 'depth.png')))
 
-    anygrasp = AnyGrasp(cfg.anygrasp)
-    anygrasp.load_net()
+    # # camera intrinsics from config
+    # fx, fy = cfg.camera.fx, cfg.camera.fy
+    # cx, cy = cfg.camera.cx, cfg.camera.cy
+    # scale = cfg.camera.scale
 
-    # get data
-    colors = np.array(Image.open(os.path.join(cfg.data_dir, 'color.png')), dtype=np.float32) / 255.0
-    depths = np.array(Image.open(os.path.join(cfg.data_dir, 'depth.png')))
+    # lims = [
+    #     cfg.workspace_limits.xmin, cfg.workspace_limits.xmax,
+    #     cfg.workspace_limits.ymin, cfg.workspace_limits.ymax,
+    #     cfg.workspace_limits.zmin, cfg.workspace_limits.zmax
+    # ]
 
-    # camera intrinsics from config
-    fx, fy = cfg.camera.fx, cfg.camera.fy
-    cx, cy = cfg.camera.cx, cfg.camera.cy
-    scale = cfg.camera.scale
+    # # point cloud computation
+    # xmap, ymap = np.meshgrid(np.arange(depths.shape[1]), np.arange(depths.shape[0]))
+    # points_z = depths / scale
+    # points_x = (xmap - cx) / fx * points_z
+    # points_y = (ymap - cy) / fy * points_z
 
-    lims = [
-        cfg.workspace_limits.xmin, cfg.workspace_limits.xmax,
-        cfg.workspace_limits.ymin, cfg.workspace_limits.ymax,
-        cfg.workspace_limits.zmin, cfg.workspace_limits.zmax
-    ]
+    # mask = (points_z > 0) & (points_z < 1)
+    # points = np.stack([points_x, points_y, points_z], axis=-1)[mask].astype(np.float32)
+    # colors = colors[mask].astype(np.float32)
 
-    # point cloud computation
-    xmap, ymap = np.meshgrid(np.arange(depths.shape[1]), np.arange(depths.shape[0]))
-    points_z = depths / scale
-    points_x = (xmap - cx) / fx * points_z
-    points_y = (ymap - cy) / fy * points_z
+    # print(points.min(axis=0), points.max(axis=0))
 
-    mask = (points_z > 0) & (points_z < 1)
-    points = np.stack([points_x, points_y, points_z], axis=-1)[mask].astype(np.float32)
-    colors = colors[mask].astype(np.float32)
-
-    print(points.min(axis=0), points.max(axis=0))
-
-    gg, cloud = anygrasp.get_grasp(points, colors, lims=lims, apply_object_mask=True, dense_grasp=False, collision_detection=True)
-
-    if len(gg) == 0:
-        print('No Grasp detected after collision detection!')
-        return
-
-    gg = gg.nms().sort_by_score()
-    gg_pick = gg[0:20]
-    print(gg_pick.scores)
-    print('grasp score:', gg_pick[0].score)
-
+    gg, cloud = grasper(points, colors, lims=lims)
+    
     # visualization
-    if cfg.anygrasp.debug:
+    if cfg.debug:
         trans_mat = np.array([[1,0,0,0],[0,1,0,0],[0,0,-1,0],[0,0,0,1]])
         cloud.transform(trans_mat)
         grippers = gg.to_open3d_geometry_list()

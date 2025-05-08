@@ -17,8 +17,6 @@ from graspnetAPI import GraspGroup
 
 def main(cfg: DictConfig):
 
-    # Clamp max_gripper_width
-
     anygrasp = AnyGrasp(cfg.anygrasp)
     anygrasp.load_net()
 
