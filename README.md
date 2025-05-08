@@ -1,2 +1,2 @@
 # AnyGrasper
-Custome wrapper for AnyGrasp
+Custom wrapper for AnyGrasp
