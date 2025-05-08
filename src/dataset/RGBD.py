@@ -9,6 +9,9 @@ from src.dataset.BaseRGBDDataset import BaseRGBDDataset
 
 
 class RGBD(BaseRGBDDataset):
+    """
+    From https://github.com/sachaMorin/rgbd_dataset/blob/main/rgbd_dataset/datasets/RGBD.py
+    """ 
     def __init__(
         self,
         rgb_dir: str = "rgb",
