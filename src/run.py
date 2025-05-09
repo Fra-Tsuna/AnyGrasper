@@ -36,44 +36,37 @@ def main(cfg: DictConfig):
     )
     for data in iterator:
         #TODO fix the collate_fn when point_cloud is true
-        print(data)
+        rgb = data['rgb'].squeeze(0).numpy() / 255.0
+        depth = data['depth'].squeeze(0).numpy()
+        intrinsics = data['intrinsics'].squeeze(0).numpy()
+        fx, fy = intrinsics[0, 0], intrinsics[1, 1]
+        cx, cy = intrinsics[0, 2], intrinsics[1, 2]
+        lims = [
+            cfg.workspace_limits.xmin, cfg.workspace_limits.xmax,
+            cfg.workspace_limits.ymin, cfg.workspace_limits.ymax,
+            cfg.workspace_limits.zmin, cfg.workspace_limits.zmax
+        ]
+        xmap, ymap = np.meshgrid(np.arange(depth.shape[1]), np.arange(depth.shape[0]))
+        points_z = depth
+        points_x = (xmap - cx) / fx * points_z
+        points_y = (ymap - cy) / fy * points_z
+        
+        mask = (points_z > 0) & (points_z < 1)
+        points = np.stack([points_x, points_y, points_z], axis=-1)[mask].astype(np.float32)
+        colors = rgb[mask].astype(np.float32)
+        R = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]],dtype=np.float32)
+        points = points @ R.T
+        
+        gg, cloud = grasper(points, colors, lims=lims)
+        if gg is None:
+            pbar.update(1)
+            continue
+        if cfg.debug:
+            trans_mat = np.array([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
+            cloud.transform(trans_mat)
+            grippers = gg.to_open3d_geometry_list()
+            for gripper in grippers:
+                gripper.transform(trans_mat)
+            o3d.visualization.draw_geometries([*grippers, cloud])
+            # o3d.visualization.draw_geometries([grippers[0], cloud])
         pbar.update(1)
-        # data = next(iterator)
-    # # get data
-    # colors = np.array(Image.open(os.path.join(cfg.data_dir, 'color.png')), dtype=np.float32) / 255.0
-    # depths = np.array(Image.open(os.path.join(cfg.data_dir, 'depth.png')))
-
-    # # camera intrinsics from config
-    # fx, fy = cfg.camera.fx, cfg.camera.fy
-    # cx, cy = cfg.camera.cx, cfg.camera.cy
-    # scale = cfg.camera.scale
-
-    # lims = [
-    #     cfg.workspace_limits.xmin, cfg.workspace_limits.xmax,
-    #     cfg.workspace_limits.ymin, cfg.workspace_limits.ymax,
-    #     cfg.workspace_limits.zmin, cfg.workspace_limits.zmax
-    # ]
-
-    # # point cloud computation
-    # xmap, ymap = np.meshgrid(np.arange(depths.shape[1]), np.arange(depths.shape[0]))
-    # points_z = depths / scale
-    # points_x = (xmap - cx) / fx * points_z
-    # points_y = (ymap - cy) / fy * points_z
-
-    # mask = (points_z > 0) & (points_z < 1)
-    # points = np.stack([points_x, points_y, points_z], axis=-1)[mask].astype(np.float32)
-    # colors = colors[mask].astype(np.float32)
-
-    # print(points.min(axis=0), points.max(axis=0))
-
-    # gg, cloud = grasper(points, colors, lims=lims)
-
-    # # visualization
-    # if cfg.debug:
-    #     trans_mat = np.array([[1,0,0,0],[0,1,0,0],[0,0,-1,0],[0,0,0,1]])
-    #     cloud.transform(trans_mat)
-    #     grippers = gg.to_open3d_geometry_list()
-    #     for gripper in grippers:
-    #         gripper.transform(trans_mat)
-    #     o3d.visualization.draw_geometries([*grippers, cloud])
-    #     o3d.visualization.draw_geometries([grippers[0], cloud])

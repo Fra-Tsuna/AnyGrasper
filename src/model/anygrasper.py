@@ -32,7 +32,7 @@ class AnyGrasper():
                                             collision_detection=self.collision_detection)
         if len(gg) == 0:
             print('No Grasp detected after collision detection!')
-            return None
+            return None, None
         gg = gg.nms().sort_by_score()
         gg_pick = gg[0:20]
         return gg_pick, cloud
