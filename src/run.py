@@ -16,6 +16,7 @@ from graspnetAPI import GraspGroup
 from src.model.anygrasper import AnyGrasper
 from src.dataset.RGBD import RGBD
 from src.dataset.BaseRGBDDataset import BaseRGBDDataset
+from src.utils.viz import capture, BEST_VIEW
 
 
 def main(cfg: DictConfig):
@@ -58,15 +59,20 @@ def main(cfg: DictConfig):
         points = points @ R.T
         
         gg, cloud = grasper(points, colors, lims=lims)
+        
         if gg is None:
             pbar.update(1)
             continue
         if cfg.debug:
-            trans_mat = np.array([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
+            trans_mat = BEST_VIEW
             cloud.transform(trans_mat)
             grippers = gg.to_open3d_geometry_list()
             for gripper in grippers:
                 gripper.transform(trans_mat)
-            o3d.visualization.draw_geometries([*grippers, cloud])
+                
+            o3d.visualization.draw_geometries_with_key_callbacks(
+                [cloud, *grippers],
+                {ord('C'): capture}
+            )
             # o3d.visualization.draw_geometries([grippers[0], cloud])
         pbar.update(1)
