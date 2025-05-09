@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader
 import numpy as np
 import open3d as o3d
 from PIL import Image
+from tqdm.auto import tqdm
+
 
 from gsnet import AnyGrasp
 from graspnetAPI import GraspGroup
@@ -15,14 +17,28 @@ from src.model.anygrasper import AnyGrasper
 from src.dataset.RGBD import RGBD
 from src.dataset.BaseRGBDDataset import BaseRGBDDataset
 
+
 def main(cfg: DictConfig):
 
     grasper: AnyGrasper = instantiate(cfg.anygrasper)
-    
-    dataset: BaseRGBDDataset = instantiate(cfg.dataset)
-    
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0)
-    
+
+    dataloader: DataLoader = instantiate(cfg.dataloader)
+
+    dataset: BaseRGBDDataset = dataloader.dataset
+
+    iterator = iter(dataloader)
+    pbar = tqdm(
+        range(len(dataset)),
+        desc="Processing",
+        total=len(dataset),
+        dynamic_ncols=True,
+        leave=True,
+    )
+    for data in iterator:
+        #TODO fix the collate_fn when point_cloud is true
+        print(data)
+        pbar.update(1)
+        # data = next(iterator)
     # # get data
     # colors = np.array(Image.open(os.path.join(cfg.data_dir, 'color.png')), dtype=np.float32) / 255.0
     # depths = np.array(Image.open(os.path.join(cfg.data_dir, 'depth.png')))
@@ -50,14 +66,14 @@ def main(cfg: DictConfig):
 
     # print(points.min(axis=0), points.max(axis=0))
 
-    gg, cloud = grasper(points, colors, lims=lims)
-    
-    # visualization
-    if cfg.debug:
-        trans_mat = np.array([[1,0,0,0],[0,1,0,0],[0,0,-1,0],[0,0,0,1]])
-        cloud.transform(trans_mat)
-        grippers = gg.to_open3d_geometry_list()
-        for gripper in grippers:
-            gripper.transform(trans_mat)
-        o3d.visualization.draw_geometries([*grippers, cloud])
-        o3d.visualization.draw_geometries([grippers[0], cloud])
+    # gg, cloud = grasper(points, colors, lims=lims)
+
+    # # visualization
+    # if cfg.debug:
+    #     trans_mat = np.array([[1,0,0,0],[0,1,0,0],[0,0,-1,0],[0,0,0,1]])
+    #     cloud.transform(trans_mat)
+    #     grippers = gg.to_open3d_geometry_list()
+    #     for gripper in grippers:
+    #         gripper.transform(trans_mat)
+    #     o3d.visualization.draw_geometries([*grippers, cloud])
+    #     o3d.visualization.draw_geometries([grippers[0], cloud])

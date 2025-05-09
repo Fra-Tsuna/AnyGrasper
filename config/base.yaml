@@ -1,7 +1,7 @@
 defaults:
   - _self_ 
   - anygrasper: anygrasper
-  - dataset: rgbd
+  - dataloader: loader
 
 workspace_limits:
   xmin: -0.19

@@ -11,7 +11,7 @@ sequence_end: -1
 sequence_stride: 1
 relative_pose: False
 depth_scale: 1000.0
-point_cloud: true
+point_cloud: false
 depth_trunc: 8.0
 rgb_dir: rgb
 depth_dir: depth
