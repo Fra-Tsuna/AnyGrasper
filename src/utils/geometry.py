@@ -1,6 +1,7 @@
 import numpy as np
 import open3d as o3d
-
+import math
+from typing import Tuple
 
 def invert_se3(se3_matrix: np.ndarray) -> np.ndarray:
     """
@@ -117,3 +118,32 @@ def rt_to_pose(R: np.ndarray, t: np.ndarray):
     x, y, z = t
 
     return np.array([x, y, z, q[0], q[1], q[2], q[3]])
+
+
+def rotation_matrix_to_euler_angles(R: np.ndarray) -> Tuple[float, float, float]:
+    """
+    Convert a 3×3 rotation matrix to Tait–Bryan angles (roll, pitch, yaw).
+
+    Args:
+        R: a 3×3 numpy array.
+
+    Returns:
+        (roll, pitch, yaw) in radians.
+    """
+    assert R.shape == (3, 3), "R must be 3×3"
+
+    # sy = sqrt(R00² + R10²)
+    sy = math.hypot(R[0, 0], R[1, 0])
+    singular = sy < 1e-6
+
+    if not singular:
+        roll  = math.atan2( R[2, 1], R[2, 2])
+        pitch = math.atan2(-R[2, 0], sy)
+        yaw   = math.atan2( R[1, 0], R[0, 0])
+    else:
+        # Gimbal lock: pitch ~ ±90°
+        roll  = math.atan2(-R[1, 2], R[1, 1])
+        pitch = math.atan2(-R[2, 0], sy)
+        yaw   = 0.0
+
+    return roll, pitch, yaw

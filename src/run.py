@@ -17,7 +17,7 @@ from src.model.anygrasper import AnyGrasper
 from src.dataset.RGBD import RGBD
 from src.dataset.BaseRGBDDataset import BaseRGBDDataset
 from src.utils.viz import capture, get_best_view
-from src.utils.geometry import rt_to_pose
+from src.utils.geometry import rt_to_pose, rotation_matrix_to_euler_angles
 
 def main(cfg: DictConfig):
 
@@ -41,7 +41,7 @@ def main(cfg: DictConfig):
         rgb = data['rgb'].squeeze(0).numpy() / 255.0
         depth = data['depth'].squeeze(0).numpy()
         intrinsics = data['intrinsics'].squeeze(0).numpy()
-        camera_pose = data['camera_pose'].squeeze(0).numpy()
+        pose = data['camera_pose'].squeeze(0).numpy()
         fx, fy = intrinsics[0, 0], intrinsics[1, 1]
         cx, cy = intrinsics[0, 2], intrinsics[1, 2]
         lims = [
@@ -68,13 +68,14 @@ def main(cfg: DictConfig):
         
         T = np.eye(4)           # allocate identity
         T[:3, :3] = rm       # upper-left block = R
-        T[:3,  3] = tr        # upper-right block = t
+        T[:3,  3] = tr        
         
-        gripper_in_camera_pose = camera_pose @ T
+        gripper_in_camera_pose = pose @ T
         rm = gripper_in_camera_pose[:3, :3]
         tr = gripper_in_camera_pose[:3, 3]
         
-        print(rt_to_pose(rm, tr))
+        roll, pitch, yaw = rotation_matrix_to_euler_angles(rm)
+        print(*tr, roll, pitch, yaw)
         
         if gg is None:
             pbar.update(1)

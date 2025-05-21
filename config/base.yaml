@@ -12,4 +12,4 @@ workspace_limits:
   zmax: 1.0
 
 debug: true
-data_dir: "tests"
+data_dir: "test_3"
