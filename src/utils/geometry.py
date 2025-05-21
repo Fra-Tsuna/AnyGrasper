@@ -56,3 +56,64 @@ def rgbd_to_pcd(
     )
 
     return pcd
+
+def rt_to_pose(R: np.ndarray, t: np.ndarray):
+    """
+    Convert a rotation matrix and translation vector into a 7-vector pose.
+
+    Parameters
+    ----------
+    R : np.ndarray, shape (3,3)
+        A valid rotation matrix.
+    t : np.ndarray, shape (3,)
+        Translation vector [x, y, z].
+
+    Returns
+    -------
+    pose : np.ndarray, shape (7,)
+        [x, y, z, qx, qy, qz, qw], where the quaternion is normalized.
+    """
+    # Ensure inputs are the right shape
+    assert R.shape == (3, 3)
+    assert t.shape == (3,)
+
+    m00, m01, m02 = R[0, :]
+    m10, m11, m12 = R[1, :]
+    m20, m21, m22 = R[2, :]
+    trace = m00 + m11 + m22
+
+    if trace > 0.0:
+        S = np.sqrt(trace + 1.0) * 2.0  # S = 4*qw
+        qw = 0.25 * S
+        qx = (m21 - m12) / S
+        qy = (m02 - m20) / S
+        qz = (m10 - m01) / S
+    else:
+        # find the largest diagonal element
+        if (m00 > m11) and (m00 > m22):
+            S = np.sqrt(1.0 + m00 - m11 - m22) * 2.0  # S=4*qx
+            qw = (m21 - m12) / S
+            qx = 0.25 * S
+            qy = (m01 + m10) / S
+            qz = (m02 + m20) / S
+        elif m11 > m22:
+            S = np.sqrt(1.0 + m11 - m00 - m22) * 2.0  # S=4*qy
+            qw = (m02 - m20) / S
+            qx = (m01 + m10) / S
+            qy = 0.25 * S
+            qz = (m12 + m21) / S
+        else:
+            S = np.sqrt(1.0 + m22 - m00 - m11) * 2.0  # S=4*qz
+            qw = (m10 - m01) / S
+            qx = (m02 + m20) / S
+            qy = (m12 + m21) / S
+            qz = 0.25 * S
+
+    # Normalize quaternion
+    q = np.array([qx, qy, qz, qw])
+    q /= np.linalg.norm(q)
+
+    # Position
+    x, y, z = t
+
+    return np.array([x, y, z, q[0], q[1], q[2], q[3]])
