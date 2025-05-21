@@ -63,8 +63,8 @@ def main(cfg: DictConfig):
             points = points @ R.T
         
         gg, cloud = grasper(points, colors, lims=lims)
-        rm = np.array(gg[4].rotation_matrix)
-        tr = np.array(gg[4].translation)
+        rm = np.array(gg[6].rotation_matrix)
+        tr = np.array(gg[6].translation)
         
         T = np.eye(4)           # allocate identity
         T[:3, :3] = rm       # upper-left block = R
@@ -89,7 +89,7 @@ def main(cfg: DictConfig):
                 gripper.transform(trans_mat)
                 
             o3d.visualization.draw_geometries_with_key_callbacks(
-                [cloud, *grippers[4:5]],
+                [cloud, *grippers[6:7]],
                 {ord('C'): capture}
             )
             # o3d.visualization.draw_geometries([grippers[0], cloud])

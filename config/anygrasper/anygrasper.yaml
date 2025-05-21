@@ -4,7 +4,7 @@ dense_grasp: false
 collision_detection: false
 anygrasp_cfg:
   checkpoint_path: ckpt/checkpoint_detection.tar
-  max_gripper_width: 0.1
-  gripper_height: 0.03
+  max_gripper_width: 0.95
+  gripper_height: 0.04
   top_down_grasp: false
   debug: true
