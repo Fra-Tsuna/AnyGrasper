@@ -1,21 +1,22 @@
 import numpy as np
 
-flip = np.array([
-                [ 1,  0,  0, 0],
-                [ 0, -1,  0, 0],
-                [ 0,  0, -1, 0],
-                [ 0,  0,  0, 1]
-            ], dtype=np.float32)
-theta = np.deg2rad(-45.0)
-rot_x = np.array([
-    [1,           0,            0, 0],
-    [0,  np.cos(theta), -np.sin(theta), 0],
-    [0,  np.sin(theta),  np.cos(theta), 0],
-    [0,           0,            0, 1]
-], dtype=np.float32)
-trans_mat = rot_x @ flip
+def get_best_view(top_down):
+    flip = np.array([
+                    [ 1,  0,  0, 0],
+                    [ 0, -1,  0, 0],
+                    [ 0,  0, -1, 0],
+                    [ 0,  0,  0, 1]
+                ], dtype=np.float32)
+    theta = np.deg2rad(-45.0)
+    rot_x = np.array([
+        [1,           0,            0, 0],
+        [0,  np.cos(theta), -np.sin(theta), 0],
+        [0,  np.sin(theta),  np.cos(theta), 0],
+        [0,           0,            0, 1]
+    ], dtype=np.float32)
+    trans_mat = rot_x @ flip if top_down else flip
 
-BEST_VIEW = trans_mat
+    return trans_mat
 
 def capture(vis):
     ctr = vis.get_view_control()
